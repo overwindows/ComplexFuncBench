@@ -50,7 +50,7 @@ class FunctionCallDeepSeek(DeepSeekModel):
         super().__init__(model_name, api_key, base_url)
         self.messages = []
 
-    @retry(max_attempts=5, delay=10)
+    @retry(max_attempts=4, delay=10)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)

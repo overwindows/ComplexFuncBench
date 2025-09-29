@@ -34,6 +34,7 @@ class RapidAPICall():
         try:
             response = requests.get(self.url, headers=self.headers, params=params_copy)
         except:
+            self.logger.error(f"RapidAPI Error for tool {self.tool}: {response.status_code}")
             return None
 
         if response.status_code == 200:

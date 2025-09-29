@@ -111,7 +111,7 @@ class GLMVllmModel():
         
         return new_messages
     
-    @retry(max_attempts=5)
+    @retry(max_attempts=10)
     def __call__(self, messages, tools=None, **kwargs: Any):
         generated_result = []
         function_calls = []
