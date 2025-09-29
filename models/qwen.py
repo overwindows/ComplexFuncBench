@@ -14,12 +14,14 @@ Reference: https://qwen.readthedocs.io/en/latest/framework/function_call.html#vl
 """
 
 class QwenModel:
-    def __init__(self, model_name):
+    def __init__(self, url, model_name):
         self.model_name = model_name
         self.messages = []
+        self.url = url
         self.client = OpenAI(
-            api_key=os.getenv("Qwen_aliyuncs_KEY"), 
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+            # api_key=os.getenv("Qwen_aliyuncs_KEY"),
+            api_key='042ca35c-beaf-4f5b-8033-9170556e5251',
+            base_url=self.url)
 
     @retry(max_attempts=5, delay=20)
     def __call__(self, messages, tools=None, **kwargs: Any):

@@ -13,7 +13,7 @@ from prompts.response import (
 class RespEvalRunner:
     def __init__(self, args, logger):
         self.logger = logger
-        self.model = GPTModel("gpt-4o-2024-08-06")
+        self.model = GPTModel("gpt-oss-120b")
 
     @retry(max_attempts=10)
     def completeness_eval(self, **kwargs):
@@ -31,6 +31,7 @@ class RespEvalRunner:
     @retry(max_attempts=10)
     def correctness_eval(self, **kwargs):
         correct_result = self.model(correct_system_prompt, correct_user_prompt, **kwargs)
+        self.logger.info(f"Raw Correct Result: {correct_result}")
         decoded_correct_result = decode_json(correct_result)
         self.logger.info(f"Correct Result: {decoded_correct_result}")
         if not isinstance(decoded_correct_result, dict) or "score" not in decoded_correct_result:

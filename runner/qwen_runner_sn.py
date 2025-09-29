@@ -5,11 +5,11 @@ from models.qwen import QwenModel
 from runner.base_runner import ModelRunner
 
 
-class QwenRunner(ModelRunner):
+class QwenRunnerSN(ModelRunner):
     def __init__(self, args, logger):
         super().__init__(args, logger)
         self.model_name = args.model_name
-        self.model = QwenModel(args.vllm_url, self.model_name)
+        self.model = QwenModel('https://api.sambanova.ai/v1', self.model_name)
     
     def get_standard_functions(self, functions):
         return [{"type": "function", "function": copy.deepcopy(func)} for func in functions]

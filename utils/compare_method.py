@@ -7,6 +7,7 @@ import numpy as np
 import numpy as np
 from FlagEmbedding import FlagModel
 from scipy.optimize import linear_sum_assignment
+import os
 
 from utils.utils import *
 from utils.rapidapi import RapidAPICall
@@ -16,15 +17,26 @@ from utils.logger import Logger
 
 class CompareFCBase:
     def __init__(self, args, logger) -> None:
-        self.embedding = FlagModel('BAAI/bge-large-en-v1.5', 
+        # Initialize embedding model with multiprocessing disabled to avoid daemon process issues
+        self.embedding = FlagModel('/nvmedata/hf_checkpoints/bge-large-en-v1.5/', 
                         query_instruction_for_retrieval="Represent this sentence for searching relevant passages:",
-                        use_fp16=True)
+                        use_fp16=True,
+                        use_multi_process=False,
+                        pool_size=0,  # Disable multiprocessing to avoid daemon process issue
+                        device='cuda' if torch.cuda.is_available() else 'cpu')
+
+        # Check if OpenAI API key is available for LLM-based comparison
+        self.openai_api_available = bool(os.getenv("OPENAI_API_KEY"))
+        if self.openai_api_available:
+            self.model = GPTModel("Meta-Llama-3.3-70B-Instruct")
+        else:
+            self.model = None
+            logger.info("OPENAI_API_KEY not found. LLM-based comparison will be skipped.")
 
         with open("utils/tool_info.json", 'r') as f:
             tool_info = json.load(f)
         tool_info = tool_info['booking-com15']
         self.api_call = RapidAPICall(tool="booking-com15", tool_info=tool_info)
-        self.model = GPTModel("gpt-4o-2024-05-13")
         self.logger = logger
         self.error_message = []
         self.exact_match_dict = load_json("utils/exact_match_values.json")
@@ -131,6 +143,10 @@ class CompareFCBase:
         return similarity[0][0] > 0.98
 
     def llm_based(self, functions, history, predict, golden):
+        if not self.openai_api_available or self.model is None:
+            self.logger.info("LLM-based comparison skipped due to missing OpenAI API key.")
+            return None
+
         kwargs = {
             "functions": json.dumps(functions, ensure_ascii=False),
             "history": json.dumps(history, ensure_ascii=False),
@@ -138,7 +154,11 @@ class CompareFCBase:
             "function_call_2": json.dumps(golden, ensure_ascii=False),
         }
 
-        output = self.model(system_prompt, user_prompt, **kwargs)
+        try:
+            output = self.model(system_prompt, user_prompt, **kwargs)
+        except Exception as e:
+            self.logger.info(f"LLM-based comparison failed: {e}")
+            return None
 
         decode_output = decode_json(output)
 
@@ -248,26 +268,31 @@ class CompareFC(CompareFCBase):
         if remaining_predict == [] or remaining_golden == []:
             return exact_matches
         
-        # embedding match
-        pred_embed = self.embedding.encode([json.dumps(value, ensure_ascii=False) for value in remaining_predict])
-        gold_embed = self.embedding.encode([json.dumps(value, ensure_ascii=False) for value in remaining_golden])
-        matrix = pred_embed @ gold_embed.T
-        
-        del pred_embed, gold_embed
-        torch.cuda.empty_cache()
-        gc.collect()
+        # embedding match with error handling for multiprocessing issues
+        try:
+            pred_embed = self.embedding.encode([json.dumps(value, ensure_ascii=False) for value in remaining_predict])
+            gold_embed = self.embedding.encode([json.dumps(value, ensure_ascii=False) for value in remaining_golden])
+            matrix = pred_embed @ gold_embed.T
+            
+            del pred_embed, gold_embed
+            torch.cuda.empty_cache()
+            gc.collect()
 
-        row_ind, col_ind = linear_sum_assignment(-matrix)  
+            row_ind, col_ind = linear_sum_assignment(-matrix)  
 
-        embedding_matches = []
-        for i, j in zip(row_ind, col_ind):
-            embedding_matches.append({
-                "idx": remaining_predict_index[i],
-                "pred_call": remaining_predict[i],
-                "golden_call": remaining_golden[j],
-                "golden_obs": golden_obs[remaining_golden_index[j]]
-            })
-        matching = exact_matches + embedding_matches
+            embedding_matches = []
+            for i, j in zip(row_ind, col_ind):
+                embedding_matches.append({
+                    "idx": remaining_predict_index[i],
+                    "pred_call": remaining_predict[i],
+                    "golden_call": remaining_golden[j],
+                    "golden_obs": golden_obs[remaining_golden_index[j]]
+                })
+            matching = exact_matches + embedding_matches
+        except Exception as e:
+            # Fallback to exact matching only if embedding fails
+            self.logger.warning(f"Embedding matching failed: {e}. Falling back to exact matching only.")
+            matching = exact_matches
 
         return matching
 

@@ -18,8 +18,8 @@ class LlamaModel:
         self.model_name = model_name
         self.url = url
         self.client = OpenAI(
-            api_key="EMPTY",
-            base_url=self.url)
+            api_key=os.getenv("SAMBANOVA_API_KEY"),
+            base_url=os.getenv("SAMBANOVA_API_URL"))
         
         self.messages = []
 

@@ -22,11 +22,21 @@ def save_json(data, dir_path):
                 f.write(json.dumps(line, ensure_ascii=False) + "\n")
 
 def decode_json(json_str):
+    if json_str is None:
+        return None
+    
+    # Store original for debugging
+    original_str = json_str
+    
     json_str = json_str.strip('```JSON\n').strip('```json\n').strip('\n```')
     json_str = json_str.replace('\n', '').replace('False', 'false').replace('True', 'true')
     try:
         return json.loads(json_str)
-    except:
+    except Exception as e:
+        # Print debugging info when JSON parsing fails
+        print(f"JSON decode failed: {e}")
+        print(f"Original string: {repr(original_str)}")
+        print(f"Processed string: {repr(json_str)}")
         return None
 
 
