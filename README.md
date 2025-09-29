@@ -109,6 +109,10 @@ python evaluation.py --model_name gpt-4o-2024-08-06 --proc_num 50
 python evaluation.py --model_name THUDM/glm-4-9b-chat --proc_num 50 --vllm_url http://xx.xx.xx.xx:8000/v1
 ```
 
+```shell
+python3 evaluation.py --model_name Meta-Llama-3.3-70B-Instruct --proc_num 50
+```
+
 The evaluation results is saved in `result/{model_name}`
 
 ### Export Results

@@ -31,6 +31,7 @@ MODEL_MAPPING = {
     "glm-4-long": GLMAPIRunner,
     "Llama-3.1-70B": LlamaRunner,
     "Llama-3.1-8B": LlamaRunner,
+    "Meta-Llama-3.3-70B-Instruct": LlamaRunner,
     "Meta-Llama-3.1-405B-Instruct-FP8": LlamaRunner,
     "qwen2.5-7b-instruct": QwenRunner,
     "qwen2.5-72b-instruct": QwenRunner,
