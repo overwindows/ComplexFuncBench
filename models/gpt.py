@@ -24,7 +24,7 @@ class GPTModel:
         prediction = self._predict(prefix, filled_prompt, **kwargs)
         return prediction
     
-    @retry(max_attempts=10)
+    #@retry(max_attempts=1)
     def _predict(self, prefix, text, **kwargs):
         try:
             completion = self.client.chat.completions.create(
@@ -48,20 +48,20 @@ class FunctionCallGPT(GPTModel):
         self.model_name = model_name
         self.messages = []
 
-    @retry(max_attempts=5, delay=10)
+    #@retry(max_attempts=5, delay=10)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)
         try:
             completion = self.client.chat.completions.create(
                 model=self.model_name,
-                # model='DeepSeek-V3-0324',
                 messages=self.messages,
                 temperature=0.0,
                 tools=tools,
                 tool_choice="auto",
                 max_tokens=2048
             )
+            print(completion)
             return completion.choices[0].message
         except Exception as e:
             print(f"Exception: {e}")

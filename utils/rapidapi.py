@@ -17,7 +17,7 @@ class RapidAPICall():
         self.path_params = tool_info['path_params']
         self.tool = tool
         
-    @retry(max_attempts=3)
+    #@retry(max_attempts=3)
     def _call(self, func_call):
         self.url = self.name_to_url[func_call["name"]]
         params_copy = copy.deepcopy(func_call['arguments'])

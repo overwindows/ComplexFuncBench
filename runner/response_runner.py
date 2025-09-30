@@ -15,7 +15,7 @@ class RespEvalRunner:
         self.logger = logger
         self.model = GPTModel("gpt-oss-120b")
 
-    @retry(max_attempts=10)
+    #@retry(max_attempts=1)
     def completeness_eval(self, **kwargs):
         complete_result = self.model(complete_system_prompt, complete_user_prompt, **kwargs)
         decoded_complete_result = decode_json(complete_result)
@@ -28,7 +28,7 @@ class RespEvalRunner:
             return None
         return decoded_complete_result
 
-    @retry(max_attempts=10)
+    #@retry(max_attempts=1)
     def correctness_eval(self, **kwargs):
         correct_result = self.model(correct_system_prompt, correct_user_prompt, **kwargs)
         self.logger.info(f"Raw Correct Result: {correct_result}")

@@ -20,7 +20,7 @@ class MistralModel:
         
         self.messages = []
 
-    @retry(max_attempts=10, delay=60)
+    #@retry(max_attempts=1, delay=60)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)
