@@ -17,7 +17,7 @@ class RapidAPICall():
         self.path_params = tool_info['path_params']
         self.tool = tool
         
-    @retry(max_attempts=3)
+    #@retry(max_attempts=3)
     def _call(self, func_call):
         self.url = self.name_to_url[func_call["name"]]
         params_copy = copy.deepcopy(func_call['arguments'])
@@ -34,6 +34,7 @@ class RapidAPICall():
         try:
             response = requests.get(self.url, headers=self.headers, params=params_copy)
         except:
+            self.logger.error(f"RapidAPI Error for tool {self.tool}: {response.status_code}")
             return None
 
         if response.status_code == 200:

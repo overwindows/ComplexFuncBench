@@ -18,8 +18,8 @@ class LlamaModel:
         self.model_name = model_name
         self.url = url
         self.client = OpenAI(
-            api_key="EMPTY",
-            base_url=self.url)
+            api_key=os.getenv("SAMBANOVA_API_KEY"),
+            base_url=os.getenv("SAMBANOVA_API_URL"))
         
         self.messages = []
 
@@ -67,7 +67,7 @@ class LlamaModel:
         return formatted_prompt
     
 
-    @retry(max_attempts=5)
+    #@retry(max_attempts=5)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)

@@ -24,7 +24,7 @@ class GLMAPIModel():
         self.message = []
         self.client = ZhipuAI(api_key=os.getenv("ZHIPU_API_KEY"))
     
-    @retry(max_attempts=10)
+    #@retry(max_attempts=1)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)
@@ -111,7 +111,7 @@ class GLMVllmModel():
         
         return new_messages
     
-    @retry(max_attempts=5)
+    #@retry(max_attempts=1)
     def __call__(self, messages, tools=None, **kwargs: Any):
         generated_result = []
         function_calls = []

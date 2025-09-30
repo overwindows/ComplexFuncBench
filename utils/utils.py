@@ -1,3 +1,4 @@
+from functools import wraps
 import json
 import re
 import time
@@ -21,12 +22,24 @@ def save_json(data, dir_path):
             for line in data:
                 f.write(json.dumps(line, ensure_ascii=False) + "\n")
 
+
 def decode_json(json_str):
+    if json_str is None:
+        return None
+
+    # Store original for debugging
+    original_str = json_str
+
     json_str = json_str.strip('```JSON\n').strip('```json\n').strip('\n```')
-    json_str = json_str.replace('\n', '').replace('False', 'false').replace('True', 'true')
+    json_str = json_str.replace('\n', '').replace(
+        'False', 'false').replace('True', 'true')
     try:
         return json.loads(json_str)
-    except:
+    except Exception as e:
+        # Print debugging info when JSON parsing fails
+        print(f"JSON decode failed: {e}")
+        print(f"Original string: {repr(original_str)}")
+        print(f"Processed string: {repr(json_str)}")
         return None
 
 
@@ -38,7 +51,7 @@ def exception_handler(func):
             print(f"An error occurred in {func.__name__}: {e}")
             tb = traceback.format_exc()
             print(f"Traceback:\n{tb}")
-            return None  
+            return None
     return wrapper
 
 
@@ -51,7 +64,6 @@ def apply_decorator_to_all_methods(decorator):
     return class_decorator
 
 
-from functools import wraps
 def retry(max_attempts=5, delay=2):
     def decorator(func):
         @wraps(func)

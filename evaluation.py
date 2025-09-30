@@ -17,26 +17,31 @@ from runner.gpt_runner import GPTRunner
 from runner.glm_runner import GLMRunner, GLMAPIRunner
 from runner.claude_runner import ClaudeRunner
 from runner.qwen_runner import QwenRunner
+from runner.qwen_runner_sn import QwenRunnerSN
 from runner.llama_runner import LlamaRunner
 from runner.mistral_runner import MistralRunner
 from runner.response_runner import RespEvalRunner
+from runner.deepseek_runner import DeepSeekRunner
 
 MODEL_MAPPING = {
     "gpt-4o-2024-08-06": GPTRunner,
     "gpt-4-turbo-2024-04-09": GPTRunner,
-    "claude-3-5-sonnet-20240620": ClaudeRunner,
     "claude-3-5-sonnet-20241022": ClaudeRunner,
     "claude-3-5-haiku-20241022": ClaudeRunner,
     "glm-4-9b-chat": GLMRunner,
     "glm-4-long": GLMAPIRunner,
     "Llama-3.1-70B": LlamaRunner,
-    "Llama-3.1-8B": LlamaRunner,
+    "Meta-Llama-3.1-8B-Instruct": LlamaRunner,
     "Meta-Llama-3.3-70B-Instruct": LlamaRunner,
     "Meta-Llama-3.1-405B-Instruct-FP8": LlamaRunner,
     "qwen2.5-7b-instruct": QwenRunner,
     "qwen2.5-72b-instruct": QwenRunner,
     "qwen2.5-7b-instruct": QwenRunner,
+    "Qwen/Qwen3-32B": QwenRunner,
+    "Qwen3-32B": QwenRunnerSN,
     "mistral-large-2407": MistralRunner,
+    "DeepSeek-V3-0324": DeepSeekRunner,
+    "DeepSeek-R1-0528": DeepSeekRunner,
 }
 
 
@@ -88,7 +93,8 @@ def process_example(data, args):
         if turn['role'] == "assistant" and "function_call" in turn:
             real_turn_count += 1
     
-    if convs[-1]['role'] == "assistant" and "content" in convs[-1]:
+    # Skip response evaluation if no OpenAI API key is available
+    if os.getenv("OPENAI_API_KEY") and convs[-1]['role'] == "assistant" and "content" in convs[-1]:
         gen_response = convs[-1]['content']
         resp_eval_result = resp_eval_model.run(data, gen_response)
     else:
@@ -131,14 +137,29 @@ def main():
     else:
         finised_ids = []
     test_data = [d for d in test_data if d['id'] not in finised_ids]
-            
-    with Manager() as manager:
-        pool = Pool(processes=args.proc_num)
-        process_example_partial = partial(process_example)
-        results = pool.starmap(process_example_partial, [(data, args) for data in test_data])
-        
-    pool.close()
-    pool.join()
+    
+    # Use single processing to avoid multiprocessing issues with FlagEmbedding
+    if args.proc_num == 1:
+        results = []
+        for data in test_data:
+            result = process_example(data, args)
+            results.append(result)
+    else:
+        # Try multiprocessing first, fallback to single processing if it fails
+        try:
+            with Manager() as manager:
+                pool = Pool(processes=args.proc_num)
+                process_example_partial = partial(process_example)
+                results = pool.starmap(process_example_partial, [(data, args) for data in test_data])
+                
+            pool.close()
+            pool.join()
+        except Exception as e:
+            print(f"Multiprocessing failed: {e}. Falling back to single processing.")
+            results = []
+            for data in test_data:
+                result = process_example(data, args)
+                results.append(result)
 
 
 if __name__ == '__main__':

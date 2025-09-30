@@ -1,3 +1,5 @@
+from utils.utils import *
+from prompts.prompts import SimpleTemplatePrompt
 from typing import Any, Dict
 import os
 from anthropic import Anthropic
@@ -8,8 +10,7 @@ import os
 from urllib.parse import unquote
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from prompts.prompts import SimpleTemplatePrompt
-from utils.utils import *
+
 
 class ClaudeModel:
     def __init__(self, model_name):
@@ -22,7 +23,7 @@ class ClaudeModel:
         prediction = self._predict(prefix, filled_prompt)
         return prediction
 
-    @retry(max_attempts=10, delay=60)
+    # @retry(max_attempts=1, delay=60)
     def _predict(self, prefix, query):
         try:
             completion = self.client.messages.create(
@@ -39,11 +40,12 @@ class ClaudeModel:
             print(f"Exception: {e}")
             return None
 
+
 class FunctionCallClaude(ClaudeModel):
     def __init__(self, model_name):
         super().__init__(model_name)
 
-    @retry(max_attempts=10, delay=60)
+    # @retry(max_attempts=1, delay=60)
     def __call__(self, messages, tools=None, **kwargs: Any):
         if "function_call" not in json.dumps(messages, ensure_ascii=False):
             self.messages = copy.deepcopy(messages)
@@ -61,7 +63,9 @@ class FunctionCallClaude(ClaudeModel):
             print(f"Exception: {e}")
             return None
 
+
 if __name__ == "__main__":
     model = ClaudeModel("claude-3-5-sonnet-20240620")
-    response_message = model._predict("You are a helpful assistant.", query="What is the capital of France?")
+    response_message = model._predict(
+        "You are a helpful assistant.", query="What is the capital of France?")
     print(response_message)
