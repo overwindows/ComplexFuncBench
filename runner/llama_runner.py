@@ -67,8 +67,8 @@ class LlamaRunner(ModelRunner):
                     if function_call is None:
                         return self.return_result(messages, {"error_type": "name_error", "content": f"{tool_call} is not Valid."})
                     function_calls.append(function_call)
-                self.logger.info(f"Function Calls: \n{json.dumps(function_calls, ensure_ascii=False, indent=4)}\n")
-                self.logger.info(f"Golden Function Call: \n{json.dumps(self.golden_fcs, ensure_ascii=False, indent=4)}\n")
+                # self.logger.info(f"Function Calls: \n{json.dumps(function_calls, ensure_ascii=False, indent=4)}\n")
+                # self.logger.info(f"Golden Function Call: \n{json.dumps(self.golden_fcs, ensure_ascii=False, indent=4)}\n")
                 messages.append({"role": "assistant", "function_call": function_calls})
                 
                 self.error_message, success_map, success_matched, format_error = self.CompareClass.compare_turn_prediction(

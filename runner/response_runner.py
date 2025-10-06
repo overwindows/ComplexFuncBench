@@ -23,20 +23,23 @@ class RespEvalRunner:
         self.logger.info(f"Complete Result: {decoded_complete_result}")
 
         if not isinstance(decoded_complete_result, dict) or "score" not in decoded_complete_result:
+            self.logger.error(f"Decoded Complete Result Error: {decoded_complete_result}")
             return None
         if decoded_complete_result['score'] not in [0, 1, 2]:
+            self.logger.error(f"Decoded Complete Result Score Error: {decoded_complete_result['score']}")
             return None
         return decoded_complete_result
 
     #@retry(max_attempts=1)
     def correctness_eval(self, **kwargs):
         correct_result = self.model(correct_system_prompt, correct_user_prompt, **kwargs)
-        self.logger.info(f"Raw Correct Result: {correct_result}")
         decoded_correct_result = decode_json(correct_result)
         self.logger.info(f"Correct Result: {decoded_correct_result}")
         if not isinstance(decoded_correct_result, dict) or "score" not in decoded_correct_result:
+            self.logger.error(f"Decoded Correct Result Error: {decoded_correct_result}")
             return None
         if decoded_correct_result['score'] not in [0, 1, 2]:
+            self.logger.error(f"Decoded Correct Result Score Error: {decoded_correct_result['score']}")
             return None
         return decoded_correct_result
 

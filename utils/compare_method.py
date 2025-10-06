@@ -28,7 +28,7 @@ class CompareFCBase:
         # Check if OpenAI API key is available for LLM-based comparison
         self.openai_api_available = bool(os.getenv("OPENAI_API_KEY"))
         if self.openai_api_available:
-            self.model = GPTModel("Meta-Llama-3.3-70B-Instruct")
+            self.model = GPTModel("gpt-oss-120b")
         else:
             self.model = None
             logger.info("OPENAI_API_KEY not found. LLM-based comparison will be skipped.")

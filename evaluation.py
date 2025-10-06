@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import json
 import random
 import argparse
@@ -26,6 +26,7 @@ from runner.deepseek_runner import DeepSeekRunner
 MODEL_MAPPING = {
     "gpt-4o-2024-08-06": GPTRunner,
     "gpt-4-turbo-2024-04-09": GPTRunner,
+    "gpt-oss-120b": GPTRunner,
     "claude-3-5-sonnet-20241022": ClaudeRunner,
     "claude-3-5-haiku-20241022": ClaudeRunner,
     "glm-4-9b-chat": GLMRunner,
@@ -48,8 +49,10 @@ MODEL_MAPPING = {
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--log_dir", type=str, default="logs/test.log")
-    parser.add_argument("--input_file", type=str, default="data/ComplexFuncBench.jsonl")
-    parser.add_argument("--model_name", type=str, required=True, choices=list(MODEL_MAPPING.keys()), help="The name of the model to be evaluated.")
+    parser.add_argument("--input_file", type=str,
+                        default="data/ComplexFuncBench.jsonl")
+    parser.add_argument("--model_name", type=str, required=True, choices=list(
+        MODEL_MAPPING.keys()), help="The name of the model to be evaluated.")
     parser.add_argument('--exp_name', type=str, default='full-1000')
     parser.add_argument("--vllm_url", type=str)
     parser.add_argument("--proc_num", type=int, default=1)
@@ -57,8 +60,10 @@ def get_args():
 
     args = parser.parse_args()
 
-    os.makedirs(f"logs/{datetime.date.today().strftime('%Y-%m-%d')}/{args.model_name}", exist_ok=True)
-    os.makedirs(f"result/{args.model_name}/{args.exp_name}/logs", exist_ok=True)
+    os.makedirs(
+        f"logs/{datetime.date.today().strftime('%Y-%m-%d')}/{args.model_name}", exist_ok=True)
+    os.makedirs(
+        f"result/{args.model_name}/{args.exp_name}/logs", exist_ok=True)
 
     args.log_dir = f"logs/{datetime.date.today().strftime('%Y-%m-%d')}/{args.model_name}/{args.exp_name}.log"
     args.output_dir = f"result/{args.model_name}/{args.exp_name}.jsonl"
@@ -75,7 +80,7 @@ def process_example(data, args):
 
     logger.info(f"Test Example {data['id']}")
     logger.info(f"Query: {data['conversations'][0]['content']}")
-    
+
     turn_count, call_count = 0, 0
     for turn in data['conversations']:
         if turn['role'] == "assistant" and "function_call" in turn:
@@ -87,17 +92,23 @@ def process_example(data, args):
     # API Error
     if isinstance(message, dict) and message["error_type"] == "unknown_error":
         return None
-    
+
     real_turn_count = 0
     for turn in convs:
         if turn['role'] == "assistant" and "function_call" in turn:
             real_turn_count += 1
-    
+
     # Skip response evaluation if no OpenAI API key is available
+    assert os.getenv(
+        "OPENAI_API_KEY"), "Please provide a valid OpenAI API key."
+    # assert convs[-1]['role'] == "assistant" and "content" in convs[-1], f"convs[-1]: {convs[-1]}"
+    # assert "content" in convs[-1], "convs[-1]: {convs[-1]}"
     if os.getenv("OPENAI_API_KEY") and convs[-1]['role'] == "assistant" and "content" in convs[-1]:
         gen_response = convs[-1]['content']
         resp_eval_result = resp_eval_model.run(data, gen_response)
     else:
+        logger.warning(
+            f"No OpenAI API key available or no generated response found. convs[-1]: {convs[-1]}")
         resp_eval_result = None
 
     logger.info(f"Message: {message}")
@@ -130,14 +141,14 @@ def main():
     test_data = load_json(args.input_file)
     if args.debug:
         test_data = random.sample(test_data, 10)
-    
+
     if os.path.exists(args.output_dir):
         finished_data = load_json(args.output_dir)
         finised_ids = [d["id"] for d in finished_data]
     else:
         finised_ids = []
     test_data = [d for d in test_data if d['id'] not in finised_ids]
-    
+
     # Use single processing to avoid multiprocessing issues with FlagEmbedding
     if args.proc_num == 1:
         results = []
@@ -150,12 +161,14 @@ def main():
             with Manager() as manager:
                 pool = Pool(processes=args.proc_num)
                 process_example_partial = partial(process_example)
-                results = pool.starmap(process_example_partial, [(data, args) for data in test_data])
-                
+                results = pool.starmap(process_example_partial, [
+                                       (data, args) for data in test_data])
+
             pool.close()
             pool.join()
         except Exception as e:
-            print(f"Multiprocessing failed: {e}. Falling back to single processing.")
+            print(
+                f"Multiprocessing failed: {e}. Falling back to single processing.")
             results = []
             for data in test_data:
                 result = process_example(data, args)
