@@ -43,6 +43,7 @@ MODEL_MAPPING = {
     "mistral-large-2407": MistralRunner,
     "DeepSeek-V3-0324": DeepSeekRunner,
     "DeepSeek-R1-0528": DeepSeekRunner,
+    "DeepSeek-V3.1": DeepSeekRunner,
 }
 
 
