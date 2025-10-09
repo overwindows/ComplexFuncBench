@@ -79,7 +79,7 @@ def process_example(data, args):
     resp_eval_model = RespEvalRunner(args=args, logger=logger)
 
     logger.info(f"Test Example {data['id']}")
-    logger.info(f"Query: {data['conversations'][0]['content']}")
+    # logger.info(f"Query: {data['conversations'][0]['content']}")
 
     turn_count, call_count = 0, 0
     for turn in data['conversations']:
@@ -148,7 +148,7 @@ def main():
     else:
         finised_ids = []
     test_data = [d for d in test_data if d['id'] not in finised_ids]
-
+    assert args.proc_num == 1
     # Use single processing to avoid multiprocessing issues with FlagEmbedding
     if args.proc_num == 1:
         results = []
