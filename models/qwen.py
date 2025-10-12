@@ -19,9 +19,8 @@ class QwenModel:
         self.messages = []
         self.url = url
         self.client = OpenAI(
-            # api_key=os.getenv("Qwen_aliyuncs_KEY"),
-            api_key='042ca35c-beaf-4f5b-8033-9170556e5251',
-            base_url=self.url)
+            api_key=os.getenv("SAMBANOVA_API_KEY"),
+            base_url=os.getenv("SAMBANOVA_API_URL"))
 
     #@retry(max_attempts=5, delay=20)
     def __call__(self, messages, tools=None, **kwargs: Any):

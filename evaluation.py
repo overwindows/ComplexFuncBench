@@ -17,7 +17,6 @@ from runner.gpt_runner import GPTRunner
 from runner.glm_runner import GLMRunner, GLMAPIRunner
 from runner.claude_runner import ClaudeRunner
 from runner.qwen_runner import QwenRunner
-from runner.qwen_runner_sn import QwenRunnerSN
 from runner.llama_runner import LlamaRunner
 from runner.mistral_runner import MistralRunner
 from runner.response_runner import RespEvalRunner
@@ -39,7 +38,7 @@ MODEL_MAPPING = {
     "qwen2.5-72b-instruct": QwenRunner,
     "qwen2.5-7b-instruct": QwenRunner,
     "Qwen/Qwen3-32B": QwenRunner,
-    "Qwen3-32B": QwenRunnerSN,
+    "Qwen3-32B": QwenRunner,
     "mistral-large-2407": MistralRunner,
     "DeepSeek-V3-0324": DeepSeekRunner,
     "DeepSeek-R1-0528": DeepSeekRunner,
