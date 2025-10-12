@@ -69,7 +69,6 @@ class FunctionCallGPT(GPTModel):
 
 
 if __name__ == "__main__":
-    # model = GPTModel("DeepSeek-V3-0324")
     model = GPTModel("gpt-oss-120b")
     response = model("You are a helpful assistant.", SimpleTemplatePrompt(template=("What is the capital of France?"), args_order=[]))
     print(response)
